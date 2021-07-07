@@ -108,9 +108,9 @@ pipeline {
                     sh """
                         scp -o StrictHostKeyChecking=no hello-world-war-1.0.0.war ec2-user@172.31.17.236:/opt/tomcat8/webapps/
                         
-                        ssh ec2-user@172.31.17.236 /opt/tomcat8/bin/shutdown.sh
+                        ssh ec2-user@172.31.17.236 /opt/tomcat/apache-tomcat-7.0.109/bin/shutdown.sh
                         
-                        ssh ec2-user@172.31.17.236 /opt/tomcat8/bin/startup.sh
+                        ssh ec2-user@172.31.17.236 /opt/tomcat/apache-tomcat-7.0.109/bin/startup.sh
                     """
                     }                
                 }
