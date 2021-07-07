@@ -11,7 +11,7 @@ pipeline {
         stage('Cloning our Git') { 
              steps {  
                  
-                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shashikantvermaji/JavaHelloWorldApp.git']]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/HarpreetSingh18/JavaHelloWorldApp.git']]])
             }
             
          } 
