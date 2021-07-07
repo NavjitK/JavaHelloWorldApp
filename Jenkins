@@ -1,0 +1,129 @@
+currentBuild.displayName = "sonar-#"+currentBuild.number
+
+pipeline { 
+    environment { 
+        registry = "shashikantvermaji/java"  
+        registryCredential = 'docker'  
+        dockerImage = '' 
+    }
+    agent any 
+     stages {  
+        stage('Cloning our Git') { 
+             steps {  
+                 
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/shashikantvermaji/JavaHelloWorldApp.git']]])
+            }
+            
+         } 
+         stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') { 
+                    sh "mvn sonar:sonar -Dsonar.login=2d2608e76febb597ac702364eeefaa063676b504"
+                }
+            }
+          
+         }
+            
+         
+       stage('Clean') { 
+             steps {  
+                 sh 'mvn clean'
+                    }
+            
+         } 
+         stage('Compile') { 
+             steps {  
+                 sh 'mvn compile'
+                    }
+            
+         } 
+         stage('Test') { 
+             steps {  
+                 sh 'mvn test'
+                    }
+            
+         } 
+         stage('Publish Test Results') {
+             steps{
+               junit keepLongStdio: true, testResults: 'target/surefire-reports/TEST-mavenforjenkins.HelloWorldPageTest.xml	'
+              }
+         }
+         
+         stage('Artifact created') { 
+             steps {  
+                 sh 'mvn install'
+                    }
+            
+         } 
+          stage('Upload Artifacts to AWS S3')
+         {
+             steps
+             {
+             withAWS(credentials: 'e9cccb11-d452-44d8-a875-9ae16bd575fe', region: 'us-east-2') {
+    
+              s3Upload(file:'target/hello-world-war-1.0.0.war', bucket:'jenkinss', path:'demopipelineartifacts/')
+             }
+             }
+         }
+         stage('S3 artifacts')
+         {
+           steps
+            {
+          withAWS(credentials: 'e9cccb11-d452-44d8-a875-9ae16bd575fe', region: 'us-east-2') {
+            
+
+           s3Download(file:'downloadArtifacts/hello-world-war-1.0.0.war', bucket:'jenkinss', path:'demopipelineartifacts/java.war',force:true)
+             }
+           }
+         }
+        
+        
+  
+ 
+       stage('Image created, infra created and terraform deploy') { 
+             steps { 
+        
+                   sh '/var/lib/jenkins/workspace/final.sh'
+                 } 
+             }
+
+
+     stage('S3 Download')
+         {
+           steps
+            {
+          withAWS(credentials: 'e9cccb11-d452-44d8-a875-9ae16bd575fe', region: 'us-east-2') {
+            
+
+           s3Download(file:'hello-world-war-1.0.0.war', bucket:'jenkinss', path:'demopipelineartifacts/java.war',force:true)
+             }
+           }
+         }
+     
+        
+        stage("Deploy to tomcat")
+        {
+            steps{
+                sshagent(['tomcatserver']) {
+                    sh """
+                        scp -o StrictHostKeyChecking=no hello-world-war-1.0.0.war ec2-user@172.31.17.236:/opt/tomcat8/webapps/
+                        
+                        ssh ec2-user@172.31.17.236 /opt/tomcat8/bin/shutdown.sh
+                        
+                        ssh ec2-user@172.31.17.236 /opt/tomcat8/bin/startup.sh
+                    """
+                    }                
+                }
+         }
+       
+      
+             
+         
+       
+     }
+}
+
+
+
+
+
