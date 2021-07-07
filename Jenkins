@@ -104,15 +104,7 @@ pipeline {
         stage("Deploy to tomcat")
         {
             steps{
-                sshagent(['tomcatserver']) {
-                    sh """
-                        scp -o StrictHostKeyChecking=no hello-world-war-1.0.0.war ubuntu@172.31.17.236:/opt/tomcat/apache-tomcat-7.0.109/webapps/
-                        
-                        ssh ubuntu@172.31.17.236 /opt/tomcat/apache-tomcat-7.0.109/bin/shutdown.sh
-                        
-                        ssh ubuntu@172.31.17.236 /opt/tomcat/apache-tomcat-7.0.109/bin/startup.sh
-                    """
-                    }                
+                sh "  /var/lib/jenkins/workspace/final.sh"               
                 }
          }
        
